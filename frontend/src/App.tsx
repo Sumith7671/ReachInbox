@@ -26,7 +26,8 @@ const ProtectedLayout: React.FC<{ children: React.ReactNode; pageTitle: string }
     );
   }
 
-  if (!user) {
+  const token = localStorage.getItem('reachinbox_token');
+  if (!user && !token) {
     return <Navigate to="/login" replace />;
   }
 

@@ -42,8 +42,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const loginWithDev = async (email?: string, name?: string) => {
-    const data = await apiService.devLogin(email, name);
-    setUser(data.user);
+    setLoading(true);
+    try {
+      const data = await apiService.devLogin(email, name);
+      if (data.token) {
+        localStorage.setItem('reachinbox_token', data.token);
+      }
+      setUser(data.user);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = async () => {

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Sparkles, ShieldCheck, Zap, Mail, ArrowRight, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 export const Login: React.FC = () => {
-  const { loginWithDev } = useAuth();
+  const { user, loginWithDev } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -13,8 +13,20 @@ export const Login: React.FC = () => {
   const [customEmail, setCustomEmail] = useState('alex.creator@reachinbox.ai');
   const [customName, setCustomName] = useState('Alex Rivera');
 
+  React.useEffect(() => {
+    if (user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
+
   const handleGoogleLogin = () => {
-    window.location.href = '/api/auth/google';
+    const rawEnv = (import.meta as any)?.env?.VITE_API_URL as string | undefined;
+    const base = rawEnv
+      ? rawEnv.startsWith('http')
+        ? rawEnv
+        : `https://${rawEnv}`.replace(/\/$/, '')
+      : '';
+    window.location.href = `${base}/api/auth/google`;
   };
 
   const handleDemoLogin = async (e: React.FormEvent) => {
@@ -24,7 +36,7 @@ export const Login: React.FC = () => {
       setLoading(true);
       await loginWithDev(customEmail, customName);
       showToast('Welcome back!', 'Authenticated successfully into ReachInbox.', 'success');
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (err: any) {
       console.error(err);
       const msg =
