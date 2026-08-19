@@ -4,7 +4,7 @@
   "description": "Production-grade full-stack email scheduler backend",
   "main": "dist/server.js",
   "scripts": {
-    "build": "prisma generate && tsc",
+    "build": "tsc",
     "start": "prisma db push --accept-data-loss && node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "prisma:generate": "prisma generate",
