@@ -9,9 +9,8 @@ import {
   PaginationInfo,
 } from '../types';
 
-const apiBase = import.meta.env.VITE_API_URL
-  ? `${(import.meta.env.VITE_API_URL as string).replace(/\/$/, '')}/api`
-  : '/api';
+const rawEnv = (import.meta as any)?.env?.VITE_API_URL as string | undefined;
+const apiBase = rawEnv ? `${rawEnv.replace(/\/$/, '')}/api` : '/api';
 
 const api = axios.create({
   baseURL: apiBase,
