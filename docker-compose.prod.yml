@@ -32,6 +32,7 @@ services:
       retries: 5
 
   backend:
+    image: reachinbox-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -60,6 +61,7 @@ services:
       - "5000:5000"
 
   frontend:
+    image: reachinbox-frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
