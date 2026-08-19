@@ -23,7 +23,23 @@ app.use(
 
 app.use(
   cors({
-    origin: [config.FRONTEND_URL, 'http://localhost:3000', 'http://localhost:5173'],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      
+      const allowed =
+        origin === config.FRONTEND_URL ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1') ||
+        origin.endsWith('.vercel.app') ||
+        origin.endsWith('.onrender.com') ||
+        origin.endsWith('.netlify.app');
+
+      if (allowed) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Permissive for easy cloud deployment & testing
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
