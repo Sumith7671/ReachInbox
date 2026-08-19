@@ -34,26 +34,38 @@ export async function requireAuth(
 
     const decoded = jwt.verify(token, config.JWT_SECRET) as AuthUser;
 
-    // Fetch fresh user from DB
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
-    });
-
-    if (!user) {
-      res.status(401).json({
-        error: 'Unauthorized',
-        message: 'User account not found',
+    // Fetch fresh user from DB or use payload
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.id },
       });
-      return;
-    }
 
-    req.user = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      avatarUrl: user.avatarUrl,
-      googleId: user.googleId,
-    };
+      if (user) {
+        req.user = {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          avatarUrl: user.avatarUrl,
+          googleId: user.googleId,
+        };
+      } else {
+        req.user = {
+          id: decoded.id,
+          email: decoded.email,
+          name: decoded.name,
+          avatarUrl: decoded.avatarUrl,
+          googleId: decoded.googleId,
+        };
+      }
+    } catch {
+      req.user = {
+        id: decoded.id,
+        email: decoded.email,
+        name: decoded.name,
+        avatarUrl: decoded.avatarUrl,
+        googleId: decoded.googleId,
+      };
+    }
 
     next();
   } catch (err: any) {
