@@ -186,3 +186,39 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     },
   });
 };
+
+export const deleteEmailJob = async (req: Request, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const { id } = req.params;
+
+  try {
+    const job = await prisma.emailJob.findFirst({
+      where: {
+        id,
+        userId: req.user.id,
+      },
+    });
+
+    if (!job) {
+      return res.status(404).json({ error: 'Email job not found' });
+    }
+
+    // Attempt to remove from queue if bullJobId exists
+    const { removeJobFromQueue } = await import('../queues/email.queue');
+    await removeJobFromQueue(job.bullJobId || job.id);
+
+    await prisma.emailJob.delete({
+      where: { id },
+    });
+
+    logger.info({ emailJobId: id, recipient: job.recipient }, 'Deleted email job');
+    return res.json({ message: 'Email job deleted successfully', deletedId: id });
+  } catch (err: any) {
+    logger.error({ error: err.message, emailJobId: id }, 'Failed to delete email job');
+    return res.status(500).json({ error: 'Failed to delete email job', message: err.message });
+  }
+};
+

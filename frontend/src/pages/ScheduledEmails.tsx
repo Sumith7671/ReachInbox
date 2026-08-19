@@ -4,7 +4,7 @@ import { useToast } from '../context/ToastContext';
 import { EmailJob, PaginationInfo } from '../types';
 import { StatusBadge } from '../components/StatusBadge';
 import { TableSkeleton } from '../components/SkeletonLoader';
-import { Search, Clock, ChevronLeft, ChevronRight, RefreshCw, Play } from 'lucide-react';
+import { Search, Clock, ChevronLeft, ChevronRight, RefreshCw, Play, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const ScheduledEmails: React.FC = () => {
@@ -14,6 +14,7 @@ export const ScheduledEmails: React.FC = () => {
   const [search, setSearch] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [dispatching, setDispatching] = useState<boolean>(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchScheduled = async (page: number = 1, searchQuery: string = search) => {
     try {
@@ -34,6 +35,20 @@ export const ScheduledEmails: React.FC = () => {
     return () => clearInterval(interval);
   }, [search]);
 
+  const handleDeleteJob = async (jobId: string, recipient: string) => {
+    if (!window.confirm(`Are you sure you want to delete this email job for ${recipient}?`)) return;
+    try {
+      setDeletingId(jobId);
+      await apiService.deleteEmailJob(jobId);
+      showToast('Deleted', `Removed queue job for ${recipient}`, 'success');
+      await fetchScheduled(pagination.page, search);
+    } catch (err: any) {
+      showToast('Delete Error', err.response?.data?.error || 'Failed to delete queue job', 'error');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const handleTriggerDispatch = async () => {
     try {
       setDispatching(true);
@@ -46,6 +61,7 @@ export const ScheduledEmails: React.FC = () => {
       setDispatching(false);
     }
   };
+
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -106,7 +122,8 @@ export const ScheduledEmails: React.FC = () => {
                   <th className="py-4 px-6">Subject</th>
                   <th className="py-4 px-6">Scheduled Execution</th>
                   <th className="py-4 px-6">Attempts</th>
-                  <th className="py-4 px-6 text-right">Status</th>
+                  <th className="py-4 px-6">Status</th>
+                  <th className="py-4 px-6 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
@@ -118,12 +135,23 @@ export const ScheduledEmails: React.FC = () => {
                       {format(new Date(job.scheduledAt), 'MMM dd, yyyy • hh:mm:ss a')}
                     </td>
                     <td className="py-4 px-6 font-mono text-slate-500">{job.attempts}</td>
-                    <td className="py-4 px-6 text-right">
+                    <td className="py-4 px-6">
                       <StatusBadge status={job.status} />
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <button
+                        onClick={() => handleDeleteJob(job.id, job.recipient)}
+                        disabled={deletingId === job.id}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors disabled:opacity-30"
+                        title="Delete from Queue"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
+
             </table>
           </div>
         )}

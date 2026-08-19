@@ -5,6 +5,7 @@ import {
   getEmailById,
   getDashboardStats,
   triggerDispatchNow,
+  deleteEmailJob,
 } from '../controllers/email.controller';
 import { requireAuth } from '../middleware/auth.middleware';
 
@@ -17,5 +18,7 @@ router.get('/scheduled', getScheduledEmails);
 router.get('/sent', getSentEmails);
 router.get('/stats', getDashboardStats);
 router.get('/:id', getEmailById);
+router.delete('/:id', deleteEmailJob);
 
 export default router;
+

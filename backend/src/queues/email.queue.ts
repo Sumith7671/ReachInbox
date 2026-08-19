@@ -101,3 +101,16 @@ export const scheduleBulkEmailJobsInQueue = async (
     return fallbackEnqueued;
   }
 };
+
+export const removeJobFromQueue = async (jobId: string) => {
+  try {
+    const job = await emailQueue.getJob(jobId);
+    if (job) {
+      await job.remove();
+      logger.info({ jobId }, 'Removed job from BullMQ queue');
+    }
+  } catch (err: any) {
+    logger.warn({ error: err.message, jobId }, 'Failed to remove job from BullMQ queue');
+  }
+};
+

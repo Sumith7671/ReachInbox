@@ -6,7 +6,7 @@ import { DashboardStats, EmailJob } from '../types';
 import { StatCard } from '../components/StatCard';
 import { StatusBadge } from '../components/StatusBadge';
 import { CardSkeleton, TableSkeleton } from '../components/SkeletonLoader';
-import { Clock, Loader2, Send, AlertTriangle, PlusCircle, ArrowRight, Layers, RefreshCw, Zap, Play } from 'lucide-react';
+import { Clock, Loader2, Send, AlertTriangle, PlusCircle, ArrowRight, Layers, RefreshCw, Zap, Play, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const Dashboard: React.FC = () => {
@@ -16,6 +16,7 @@ export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [dispatching, setDispatching] = useState<boolean>(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -43,6 +44,21 @@ export const Dashboard: React.FC = () => {
     setRefreshing(true);
     fetchData();
   };
+
+  const handleDeleteJob = async (jobId: string, recipient: string) => {
+    if (!window.confirm(`Are you sure you want to delete this email job for ${recipient}?`)) return;
+    try {
+      setDeletingId(jobId);
+      await apiService.deleteEmailJob(jobId);
+      showToast('Deleted', `Removed queue job for ${recipient}`, 'success');
+      await fetchData();
+    } catch (err: any) {
+      showToast('Delete Error', err.response?.data?.error || 'Failed to delete queue job', 'error');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
 
   const handleTriggerDispatch = async () => {
     try {
@@ -212,12 +228,13 @@ export const Dashboard: React.FC = () => {
                   <th className="py-4 px-6">Subject</th>
                   <th className="py-4 px-6">Scheduled Execution Time</th>
                   <th className="py-4 px-6">Status</th>
+                  <th className="py-4 px-6 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
                 {recentJobs.map((job) => (
                   <tr key={job.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-4 px-6 text-slate-900 font-bold">{job.recipient}</td>
+                    <td className="py-4 px-6 text-slate-900 font-bold font-mono">{job.recipient}</td>
                     <td className="py-4 px-6 text-slate-700 max-w-xs truncate">{job.subject}</td>
                     <td className="py-4 px-6 text-slate-500 text-xs font-mono">
                       {format(new Date(job.scheduledAt), 'MMM dd, yyyy • hh:mm:ss a')}
@@ -225,9 +242,20 @@ export const Dashboard: React.FC = () => {
                     <td className="py-4 px-6">
                       <StatusBadge status={job.status} />
                     </td>
+                    <td className="py-4 px-6 text-right">
+                      <button
+                        onClick={() => handleDeleteJob(job.id, job.recipient)}
+                        disabled={deletingId === job.id}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors disabled:opacity-30"
+                        title="Delete from Queue"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
+
             </table>
           </div>
         )}

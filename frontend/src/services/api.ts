@@ -89,6 +89,12 @@ export const apiService = {
     return res.data;
   },
 
+  async deleteEmailJob(id: string): Promise<{ message: string; deletedId: string }> {
+    const res = await api.delete<{ message: string; deletedId: string }>(`/emails/${id}`);
+    return res.data;
+  },
+
+
   // File Upload Parser Endpoint
   async parseLeadsFile(file: File): Promise<{ summary: LeadParseSummary }> {
     const formData = new FormData();
