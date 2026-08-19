@@ -44,47 +44,68 @@ const ProtectedLayout: React.FC<{ children: React.ReactNode; pageTitle: string }
   );
 };
 
+const MainRoutes: React.FC = () => {
+  const { user } = useAuth();
+  const savedUser = localStorage.getItem('reachinbox_user');
+  const token = localStorage.getItem('reachinbox_token');
+  const isAuthenticated = !!(user || (savedUser && token));
+
+  return (
+    <Routes>
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />}
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedLayout pageTitle="Workspace Dashboard">
+            <Dashboard />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/scheduled"
+        element={
+          <ProtectedLayout pageTitle="Scheduled Queue">
+            <ScheduledEmails />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/sent"
+        element={
+          <ProtectedLayout pageTitle="Delivery Logs">
+            <SentEmails />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/compose"
+        element={
+          <ProtectedLayout pageTitle="Compose Campaign">
+            <ComposeCampaign />
+          </ProtectedLayout>
+        }
+      />
+      <Route
+        path="/"
+        element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />}
+      />
+      <Route
+        path="*"
+        element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />}
+      />
+    </Routes>
+  );
+};
+
 export const App: React.FC = () => {
   return (
     <AuthProvider>
       <ToastProvider>
         <Router>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedLayout pageTitle="Workspace Dashboard">
-                  <Dashboard />
-                </ProtectedLayout>
-              }
-            />
-            <Route
-              path="/scheduled"
-              element={
-                <ProtectedLayout pageTitle="Scheduled Queue">
-                  <ScheduledEmails />
-                </ProtectedLayout>
-              }
-            />
-            <Route
-              path="/sent"
-              element={
-                <ProtectedLayout pageTitle="Delivery Logs">
-                  <SentEmails />
-                </ProtectedLayout>
-              }
-            />
-            <Route
-              path="/compose"
-              element={
-                <ProtectedLayout pageTitle="Compose Campaign">
-                  <ComposeCampaign />
-                </ProtectedLayout>
-              }
-            />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
+          <MainRoutes />
         </Router>
       </ToastProvider>
     </AuthProvider>
