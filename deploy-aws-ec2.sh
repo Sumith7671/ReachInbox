@@ -24,6 +24,14 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plu
 
 sudo usermod -aG docker $USER || true
 
+# Install Docker Compose standalone binary as guaranteed fallback
+if ! docker compose version &> /dev/null && ! command -v docker-compose &> /dev/null; then
+  echo "📥 Installing Docker Compose binary..."
+  sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+  sudo chmod +x /usr/local/bin/docker-compose
+  sudo ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose || true
+fi
+
 echo "📦 [3/4] Cloning ReachInbox repository..."
 if [ -d "ReachInbox" ]; then
   cd ReachInbox
@@ -34,7 +42,11 @@ else
 fi
 
 echo "🚀 [4/4] Building and launching ReachInbox Production stack..."
-sudo docker compose -f docker-compose.prod.yml up -d --build
+if docker compose version &> /dev/null; then
+  sudo docker compose -f docker-compose.prod.yml up -d --build
+else
+  sudo docker-compose -f docker-compose.prod.yml up -d --build
+fi
 
 echo "=============================================================================="
 echo "🎉 ReachInbox is successfully deployed on AWS EC2!"
