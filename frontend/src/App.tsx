@@ -17,7 +17,10 @@ const ProtectedLayout: React.FC<{ children: React.ReactNode; pageTitle: string }
 }) => {
   const { user, loading } = useAuth();
 
-  if (loading) {
+  const token = localStorage.getItem('reachinbox_token');
+  const savedUser = localStorage.getItem('reachinbox_user');
+
+  if (loading && !user && !savedUser && !token) {
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-slate-900 text-white space-y-4">
         <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
@@ -26,8 +29,7 @@ const ProtectedLayout: React.FC<{ children: React.ReactNode; pageTitle: string }
     );
   }
 
-  const token = localStorage.getItem('reachinbox_token');
-  if (!user && !token) {
+  if (!user && !savedUser && !token) {
     return <Navigate to="/login" replace />;
   }
 

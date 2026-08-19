@@ -36,7 +36,7 @@ export const Login: React.FC = () => {
       setLoading(true);
       await loginWithDev(customEmail, customName);
       showToast('Welcome back!', 'Authenticated successfully into ReachInbox.', 'success');
-      window.location.href = '/dashboard';
+      navigate('/dashboard', { replace: true });
     } catch (err: any) {
       console.error(err);
       const msg =
