@@ -9,8 +9,17 @@ import {
   PaginationInfo,
 } from '../types';
 
-const rawEnv = (import.meta as any)?.env?.VITE_API_URL as string | undefined;
-const apiBase = rawEnv ? `${rawEnv.replace(/\/$/, '')}/api` : '/api';
+const formatApiUrl = (): string => {
+  const rawEnv = (import.meta as any)?.env?.VITE_API_URL as string | undefined;
+  if (!rawEnv || rawEnv === '/' || rawEnv === '') return '/api';
+  const urlWithProtocol =
+    rawEnv.startsWith('http://') || rawEnv.startsWith('https://')
+      ? rawEnv
+      : `https://${rawEnv}`;
+  return `${urlWithProtocol.replace(/\/$/, '')}/api`;
+};
+
+const apiBase = formatApiUrl();
 
 const api = axios.create({
   baseURL: apiBase,

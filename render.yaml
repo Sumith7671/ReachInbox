@@ -1,3 +1,9 @@
+databases:
+  - name: reachinbox-db
+    plan: free
+    databaseName: reachinbox_db
+    user: reachinbox
+
 services:
   # ReachInbox Backend API Web Service
   - type: web
@@ -5,7 +11,7 @@ services:
     runtime: node
     rootDir: backend
     plan: free
-    buildCommand: npm install && npm run build && npx prisma db push
+    buildCommand: npm install && npx prisma generate && npm run build && npx prisma db push --accept-data-loss
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -13,9 +19,9 @@ services:
       - key: PORT
         value: 10000
       - key: DATABASE_URL
-        value: file:./dev.db
-      - key: REDIS_URL
-        value: redis://localhost:6379
+        fromDatabase:
+          name: reachinbox-db
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: SESSION_SECRET
@@ -27,11 +33,11 @@ services:
       - key: SMTP_PORT
         value: 587
       - key: SMTP_USER
-        sync: false
+        value: sumithreddy509@gmail.com
       - key: SMTP_PASS
-        sync: false
+        value: wgbfpilfbwultpsy
       - key: SMTP_FROM
-        sync: false
+        value: "Sumith Reddy <sumithreddy509@gmail.com>"
       - key: FRONTEND_URL
         fromService:
           type: web
@@ -43,6 +49,7 @@ services:
     name: reachinbox-frontend
     runtime: static
     rootDir: frontend
+    plan: free
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
     routes:
