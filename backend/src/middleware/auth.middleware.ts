@@ -15,13 +15,13 @@ export async function requireAuth(
   try {
     let token: string | undefined;
 
-    // 1. Check HTTP-only cookie
-    if (req.cookies && req.cookies.token) {
-      token = req.cookies.token;
-    }
-    // 2. Check Authorization header
-    else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    // 1. Check Authorization header (Bearer token)
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
       token = req.headers.authorization.split(' ')[1];
+    }
+    // 2. Fallback to HTTP-only cookie
+    else if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
     }
 
     if (!token) {

@@ -27,20 +27,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshAuth = async () => {
     const token = localStorage.getItem('reachinbox_token');
-    if (!token && !user) {
+    if (!token) {
       setLoading(false);
       return;
     }
     try {
       const data = await apiService.getMe();
-      setUser(data.user);
-      localStorage.setItem('reachinbox_user', JSON.stringify(data.user));
-    } catch (error) {
-      if (!user) {
-        setUser(null);
-        localStorage.removeItem('reachinbox_token');
-        localStorage.removeItem('reachinbox_user');
+      if (data?.user) {
+        setUser(data.user);
+        localStorage.setItem('reachinbox_user', JSON.stringify(data.user));
       }
+    } catch (error) {
+      console.warn('Background profile refresh skipped:', error);
     } finally {
       setLoading(false);
     }
