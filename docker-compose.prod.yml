@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: reachinbox-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: reachinbox
+      POSTGRES_PASSWORD: reachinbox_secure_password_2026
+      POSTGRES_DB: reachinbox_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reachinbox -d reachinbox_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: reachinbox-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_prod_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: reachinbox-backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: postgresql://reachinbox:reachinbox_secure_password_2026@postgres:5432/reachinbox_db?schema=public
+      REDIS_URL: redis://redis:6379
+      SMTP_PROVIDER: smtp
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: sumithreddy509@gmail.com
+      SMTP_PASS: wgbfpilfbwultpsy
+      SMTP_FROM: "Sumith Reddy <sumithreddy509@gmail.com>"
+      SESSION_SECRET: reachinbox-aws-prod-session-key-2026
+      JWT_SECRET: reachinbox-aws-prod-jwt-key-2026
+      FRONTEND_URL: "http://localhost"
+    ports:
+      - "5000:5000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: reachinbox-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:
