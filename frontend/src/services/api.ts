@@ -15,6 +15,7 @@ const apiBase = rawEnv ? `${rawEnv.replace(/\/$/, '')}/api` : '/api';
 const api = axios.create({
   baseURL: apiBase,
   withCredentials: true,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },

@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, ShieldCheck, Zap, Mail, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Sparkles, ShieldCheck, Zap, Mail, ArrowRight, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const { loginWithDev } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [customEmail, setCustomEmail] = useState('alex.creator@reachinbox.ai');
   const [customName, setCustomName] = useState('Alex Rivera');
 
@@ -16,12 +19,24 @@ export const Login: React.FC = () => {
 
   const handleDemoLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     try {
       setLoading(true);
       await loginWithDev(customEmail, customName);
+      showToast('Welcome back!', 'Authenticated successfully into ReachInbox.', 'success');
       navigate('/dashboard');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      const msg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        (err?.code === 'ECONNABORTED'
+          ? 'Request timed out. Backend server is taking too long to respond.'
+          : err?.message?.includes('Network Error')
+          ? 'Cannot reach Backend API. Please verify the backend container is running.'
+          : err?.message || 'Authentication failed');
+      setErrorMessage(msg);
+      showToast('Login Failed', msg, 'error');
     } finally {
       setLoading(false);
     }
@@ -136,13 +151,29 @@ export const Login: React.FC = () => {
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-500 transition-colors"
               />
             </div>
+            {errorMessage && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-2.5 text-rose-400 text-xs leading-relaxed">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-brand-400 font-semibold text-sm flex items-center justify-center gap-2 border border-slate-700 transition-colors"
+              className="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-brand-400 font-semibold text-sm flex items-center justify-center gap-2 border border-slate-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              <CheckCircle2 className="w-4 h-4 text-brand-400" />
-              <span>{loading ? 'Authenticating...' : 'Instant Demo Login'}</span>
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 text-brand-400 animate-spin" />
+                  <span>Connecting to Backend...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-brand-400" />
+                  <span>Instant Demo Login</span>
+                </>
+              )}
             </button>
           </form>
         </div>
