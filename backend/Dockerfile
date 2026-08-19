@@ -25,12 +25,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=5000
 
-COPY package*.json ./
-RUN npm ci --only=production
-
-COPY prisma ./prisma/
-RUN npx prisma generate
-
+# Copy node_modules and build artifacts directly from builder stage
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/dist ./dist
 
 EXPOSE 5000

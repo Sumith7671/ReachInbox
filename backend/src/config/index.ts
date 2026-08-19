@@ -5,7 +5,7 @@ import path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const configSchema = z.object({
-  PORT: z.string().default('5000').transform((val) => parseInt(val, 10)),
+  PORT: z.coerce.number().default(5000),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
@@ -21,20 +21,20 @@ const configSchema = z.object({
   // SMTP Provider Config (e.g. "smtp" or "ethereal")
   SMTP_PROVIDER: z.string().default('smtp'),
   SMTP_HOST: z.string().optional().default(''),
-  SMTP_PORT: z.string().default('587').transform((val) => parseInt(val, 10)),
+  SMTP_PORT: z.coerce.number().default(587),
   SMTP_USER: z.string().optional().default(''),
   SMTP_PASS: z.string().optional().default(''),
   SMTP_FROM: z.string().optional().default(''),
 
   // Ethereal Test Account Fallback
   ETHEREAL_HOST: z.string().default('smtp.ethereal.email'),
-  ETHEREAL_PORT: z.string().default('587').transform((val) => parseInt(val, 10)),
+  ETHEREAL_PORT: z.coerce.number().default(587),
   ETHEREAL_USER: z.string().optional().default(''),
   ETHEREAL_PASSWORD: z.string().optional().default(''),
 
-  WORKER_CONCURRENCY: z.string().default('5').transform((val) => parseInt(val, 10)),
-  MIN_EMAIL_DELAY_MS: z.string().default('2000').transform((val) => parseInt(val, 10)),
-  MAX_EMAILS_PER_HOUR: z.string().default('200').transform((val) => parseInt(val, 10)),
+  WORKER_CONCURRENCY: z.coerce.number().default(5),
+  MIN_EMAIL_DELAY_MS: z.coerce.number().default(2000),
+  MAX_EMAILS_PER_HOUR: z.coerce.number().default(200),
 
   FRONTEND_URL: z.string().default('http://localhost:3000'),
 });
