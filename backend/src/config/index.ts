@@ -39,11 +39,4 @@ const configSchema = z.object({
   FRONTEND_URL: z.string().default('http://localhost:3000'),
 });
 
-const parsed = configSchema.safeParse(process.env);
-
-if (!parsed.success) {
-  console.error('Invalid environment configuration:', parsed.error.format());
-  process.exit(1);
-}
-
-export const config = parsed.data;
+export const config = configSchema.parse(process.env);
