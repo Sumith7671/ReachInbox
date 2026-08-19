@@ -1,0 +1,67 @@
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import { PrismaClient } from '@prisma/client';
+import { config } from '../config';
+import { AuthUser } from '../types';
+import { logger } from '../utils/logger';
+
+const prisma = new PrismaClient();
+
+export async function requireAuth(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    let token: string | undefined;
+
+    // 1. Check HTTP-only cookie
+    if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
+    }
+    // 2. Check Authorization header
+    else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+
+    if (!token) {
+      res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Authentication token missing or invalid session',
+      });
+      return;
+    }
+
+    const decoded = jwt.verify(token, config.JWT_SECRET) as AuthUser;
+
+    // Fetch fresh user from DB
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+    });
+
+    if (!user) {
+      res.status(401).json({
+        error: 'Unauthorized',
+        message: 'User account not found',
+      });
+      return;
+    }
+
+    req.user = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      avatarUrl: user.avatarUrl,
+      googleId: user.googleId,
+    };
+
+    next();
+  } catch (err: any) {
+    logger.warn({ error: err.message }, 'Authentication verification failed');
+    res.status(401).json({
+      error: 'Unauthorized',
+      message: 'Invalid or expired authentication token',
+    });
+    return;
+  }
+}

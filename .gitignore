@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+*.env
+
+# Uploads & Temp files
+uploads/
+backend/uploads/
+*.tmp
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database & Prisma SQLite files
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+backend/prisma/*.db
+backend/prisma/*.db-journal
+backend/dev.db
+
+# Coverage directory
+coverage/
+
