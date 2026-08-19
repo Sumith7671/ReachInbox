@@ -5,7 +5,7 @@ import { apiService } from '../services/api';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  loginWithDev: (email?: string, name?: string) => Promise<void>;
+  loginWithDev: (email?: string, name?: string) => Promise<User | void>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
 }
@@ -13,16 +13,34 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const saved = localStorage.getItem('reachinbox_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    return !localStorage.getItem('reachinbox_user');
+  });
 
   const refreshAuth = async () => {
+    const token = localStorage.getItem('reachinbox_token');
+    if (!token && !user) {
+      setLoading(false);
+      return;
+    }
     try {
-      setLoading(true);
       const data = await apiService.getMe();
       setUser(data.user);
+      localStorage.setItem('reachinbox_user', JSON.stringify(data.user));
     } catch (error) {
-      setUser(null);
+      if (!user) {
+        setUser(null);
+        localStorage.removeItem('reachinbox_token');
+        localStorage.removeItem('reachinbox_user');
+      }
     } finally {
       setLoading(false);
     }
@@ -48,7 +66,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.token) {
         localStorage.setItem('reachinbox_token', data.token);
       }
-      setUser(data.user);
+      if (data.user) {
+        localStorage.setItem('reachinbox_user', JSON.stringify(data.user));
+        setUser(data.user);
+      }
+      return data.user;
     } finally {
       setLoading(false);
     }
@@ -62,6 +84,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setUser(null);
     localStorage.removeItem('reachinbox_token');
+    localStorage.removeItem('reachinbox_user');
+    window.location.href = '/login';
   };
 
   return (
